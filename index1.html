@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Scam Detection - Advanced Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .dashboard-container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        .header {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            margin-bottom: 25px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+        }
+        .header h1 {
+            color: #2d3748;
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .ml-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: #48bb78;
+            color: white;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .button-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        .button-success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+        .button-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--card-color), transparent);
+        }
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+            border-color: var(--card-color);
+        }
+        .stat-card.danger { --card-color: #f56565; }
+        .stat-card.warning { --card-color: #ed8936; }
+        .stat-card.success { --card-color: #48bb78; }
+        .stat-card.info { --card-color: #4299e1; }
+        .stat-card.purple { --card-color: #9f7aea; }
+        .stat-card h3 {
+            color: #718096;
+            font-size: 13px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        .stat-card .value {
+            font-size: 42px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--card-color);
+        }
+        .stat-card .trend {
+            font-size: 13px;
+            color: #48bb78;
+            font-weight: 500;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            margin-bottom: 25px;
+        }
+        .card h2 {
+            color: #2d3748;
+            margin-bottom: 25px;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #718096;
+            font-weight: 600;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            font-size: 14px;
+        }
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        .tab:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        .ml-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 5px solid var(--metric-color);
+        }
+        .metric-card h4 {
+            color: #2d3748;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .metric-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--metric-color);
+            margin-bottom: 5px;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #718096;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+        .message-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .message-item {
+            padding: 20px;
+            border-left: 5px solid #e2e8f0;
+            margin-bottom: 15px;
+            background: #f7fafc;
+            border-radius: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .message-item:hover {
+            background: #edf2f7;
+            transform: translateX(8px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .message-item.scam {
+            border-left-color: #f56565;
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+        }
+        .message-item.suspicious {
+            border-left-color: #ed8936;
+            background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%);
+        }
+        .message-item.normal {
+            border-left-color: #48bb78;
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+        }
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        .message-user {
+            font-weight: bold;
+            color: #2d3748;
+            font-size: 15px;
+        }
+        .message-time {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        .message-content {
+            color: #4a5568;
+            font-size: 14px;
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        .message-ml-analysis {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 12px;
+            border: 2px solid #e2e8f0;
+        }
+        .ml-prediction-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f7fafc;
+            border-radius: 6px;
+        }
+        .ml-model-name {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 13px;
+        }
+        .ml-confidence {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .confidence-bar {
+            width: 100px;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #667eea);
+            transition: width 0.3s;
+        }
+        .tag {
+            padding: 6px 14px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .tag.scam {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        .tag.suspicious {
+            background: #feebc8;
+            color: #c05621;
+        }
+        .tag.normal {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .model-performance {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        .model-performance:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
+        }
+        .model-name {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .model-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .model-metric {
+            text-align: center;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        .model-metric-label {
+            font-size: 11px;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+        .model-metric-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .visualization-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .viz-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .viz-card:hover {
+            border-color: #667eea;
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        .viz-card img {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .viz-title {
+            font-weight: 600;
+            color: #2d3748;
+            text-align: center;
+        }
+        .group-monitor-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .group-monitor-card:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
+        }
+        .group-monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f7fafc;
+        }
+        .group-monitor-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .group-risk-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .risk-score-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .risk-low { background: #c6f6d5; color: #276749; }
+        .risk-medium { background: #feebc8; color: #c05621; }
+        .risk-high { background: #fed7d7; color: #c53030; }
+        .risk-critical { background: #c53030; color: white; animation: blink 1s infinite; }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .group-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+        .group-stat-item {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .group-stat-label {
+            font-size: 11px;
+            color: #718096;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .group-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .group-progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+        .group-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #f56565);
+            transition: width 0.3s;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+        .close-modal {
+            cursor: pointer;
+            font-size: 32px;
+            color: #718096;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .close-modal:hover {
+            color: #f56565;
+            transform: rotate(90deg);
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 10000;
+            min-width: 320px;
+            animation: slideIn 0.3s ease-out;
+            display: none;
+            border-left: 5px solid;
+        }
+        .notification.show {
+            display: block;
+        }
+        .notification.success {
+            border-left-color: #48bb78;
+        }
+        .notification.error {
+            border-left-color: #f56565;
+        }
+        .notification.info {
+            border-left-color: #4299e1;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .scrollbar::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        .scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .scrollbar::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+        .scrollbar::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5a67d8, #6b46c1);
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #718096;
+        }
+        .spinner {
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+           
+            .header h1 {
+                font-size: 24px;
+            }
+           
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                🤖 ML Scam Detection Dashboard
+                <span class="ml-badge">Machine Learning Engine</span>
+                <span class="status-badge">● LIVE</span>
+            </h1>
+            <p style="color: #718096; margin-bottom: 15px;">
+                Ensemble of 8 ML Models • TF-IDF Features • Real-time Classification • Email Alerts
+            </p>
+            <div class="header-actions">
+                <button class="button button-success" onclick="downloadDataset()">
+                    📊 Export Dataset
+                </button>
+                <button class="button button-primary" onclick="refreshDashboard()">
+                    🔄 Refresh Now
+                </button>
+            </div>
+        </div>
+        <!-- Notification Toast -->
+        <div class="notification" id="notification">
+            <div id="notificationContent"></div>
+        </div>
+        <!-- Statistics Grid -->
+        <div class="stats-grid">
+            <div class="stat-card info">
+                <h3>Total Messages</h3>
+                <div class="value" id="totalMessages">0</div>
+                <div class="trend">ML Analyzed</div>
+            </div>
+            <div class="stat-card danger">
+                <h3>Scam Detected</h3>
+                <div class="value" id="scamMessages">0</div>
+                <div class="trend" id="scamTrend">0% of total</div>
+            </div>
+            <div class="stat-card warning">
+                <h3>Suspicious</h3>
+                <div class="value" id="suspiciousMessages">0</div>
+                <div class="trend" id="suspiciousTrend">0% of total</div>
+            </div>
+            <div class="stat-card success">
+                <h3>Normal Messages</h3>
+                <div class="value" id="normalMessages">0</div>
+                <div class="trend" id="normalTrend">0% of total</div>
+            </div>
+            <div class="stat-card purple">
+                <h3>Groups Monitored</h3>
+                <div class="value" id="totalGroups">0</div>
+                <div class="trend">Active monitoring</div>
+            </div>
+        </div>
+        <!-- ML Performance Overview -->
+        <div class="card">
+        <!-- Classification Distribution Chart -->
+        <div class="card">
+            <h2>📊 Classification Distribution</h2>
+            <div class="chart-container">
+                <canvas id="classificationChart"></canvas>
+            </div>
+        </div>
+        <!-- Group Monitoring Section -->
+        <div class="card">
+            <h2>
+                🏢 Monitored Groups
+                <span style="font-size: 14px; color: #718096; font-weight: normal;">
+                    (<span id="groupCount">0</span> groups active)
+                </span>
+            </h2>
+           
+            <div id="groupMonitoringList" class="scrollbar" style="max-height: 600px; overflow-y: auto;">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading groups...
+                </div>
+            </div>
+        </div>
+        <!-- Live Message Feed -->
+        <div class="card">
+            <h2>
+                📨 Live Message Feed
+                <span style="font-size: 14px; color: #718096; font-weight: normal;">
+                    (Auto-updates every 5s)
+                </span>
+            </h2>
+           
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('all')">All Messages</button>
+                <button class="tab" onclick="switchTab('scam')">Scam Only</button>
+                <button class="tab" onclick="switchTab('suspicious')">Suspicious Only</button>
+                <button class="tab" onclick="switchTab('normal')">Normal Only</button>
+            </div>
+            <div class="message-list scrollbar" id="messageList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading messages...
+                </div>
+            </div>
+        </div>
+        <!-- Visualizations Gallery -->
+        <div class="card">
+            <h2>🎨 ML Model Visualizations</h2>
+            <div id="visualizationGallery" class="visualization-gallery">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading visualizations...
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Message Detail Modal -->
+    <div class="modal" id="messageModal">
+        <div class="modal-content scrollbar">
+            <div class="modal-header">
+                <h2>📋 Detailed ML Analysis</h2>
+                <span class="close-modal" onclick="closeModal()">×</span>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+    <!-- Model Metrics Modal -->
+    <div class="modal" id="metricsModal">
+        <div class="modal-content scrollbar">
+            <div class="modal-header">
+                <h2>📊 Complete Model Metrics</h2>
+                <span class="close-modal" onclick="closeMetricsModal()">×</span>
+            </div>
+            <div id="metricsContent"></div>
+        </div>
+    </div>
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:8001';
+        let allMessages = [];
+        let allGroups = [];
+        let currentFilter = 'all';
+        let classificationChart = null;
+        let modelMetrics = null;
+        // Initialize dashboard
+        async function initDashboard() {
+            await fetchStatistics();
+            await fetchMessages();
+            await fetchGroups();
+            await loadModelMetrics();
+            await loadVisualizations();
+            initCharts();
+           
+            // Auto-refresh
+            setInterval(async () => {
+                await fetchStatistics();
+                await fetchMessages();
+                await fetchGroups();
+            }, 5000);
+        }
+        // Fetch statistics
+        async function fetchStatistics() {
+            try {
+                const response = await fetch(`${API_BASE}/statistics`);
+                const data = await response.json();
+               
+                document.getElementById('totalMessages').textContent = data.total_messages.toLocaleString();
+                document.getElementById('scamMessages').textContent = data.fraud_messages.toLocaleString();
+                document.getElementById('suspiciousMessages').textContent = data.suspicious_messages.toLocaleString();
+                document.getElementById('normalMessages').textContent = data.normal_messages.toLocaleString();
+                document.getElementById('totalGroups').textContent = data.total_groups.toLocaleString();
+               
+                document.getElementById('scamTrend').textContent = `${data.fraud_percentage}% of total`;
+                document.getElementById('suspiciousTrend').textContent = `${data.suspicious_percentage}% of total`;
+               
+                const normalPct = ((data.normal_messages / data.total_messages) * 100 || 0).toFixed(2);
+                document.getElementById('normalTrend').textContent = `${normalPct}% of total`;
+               
+                updateClassificationChart(data);
+            } catch (error) {
+                console.error('Error fetching statistics:', error);
+            }
+        }
+        // Fetch messages
+        async function fetchMessages() {
+            try {
+                const response = await fetch(`${API_BASE}/messages`);
+                const data = await response.json();
+               
+                if (data.messages) {
+                    allMessages = data.messages.map(msg => ({
+                        id: msg.message_id,
+                        group_id: msg.group_id,
+                        user_id: msg.user_id,
+                        content: msg.content,
+                        classification: msg.ml_prediction?.final_classification || 'Normal',
+                        confidence: msg.ml_prediction?.confidence || 0,
+                        ensemble_confidence: msg.ml_prediction?.ensemble_confidence || 0,
+                        timestamp: msg.timestamp,
+                        ml_prediction: msg.ml_prediction || {}
+                    }));
+                   
+                    updateMessageDisplay();
+                    updateGroupMonitoring(); // Update groups with message counts
+                }
+            } catch (error) {
+                console.error('Error fetching messages:', error);
+            }
+        }
+        // Fetch groups
+        async function fetchGroups() {
+            try {
+                const response = await fetch(`${API_BASE}/groups`);
+                const data = await response.json();
+               
+                if (data.groups) {
+                    allGroups = data.groups.map(g => ({
+                        id: g.group_id,
+                        name: g.title || 'Unknown Group',
+                        username: g.username || null,
+                        risk_score: g.risk_score || 0,
+                        members: g.member_count || 0,
+                        last_updated: g.last_updated,
+                        last_reported: g.last_reported
+                    }));
+                   
+                    updateGroupMonitoring();
+                }
+            } catch (error) {
+                console.error('Error fetching groups:', error);
+            }
+        }
+        // Update group monitoring display
+        function updateGroupMonitoring() {
+            const container = document.getElementById('groupMonitoringList');
+            const countDisplay = document.getElementById('groupCount');
+           
+            countDisplay.textContent = allGroups.length;
+           
+            if (allGroups.length === 0) {
+                container.innerHTML = '<div class="loading">No groups being monitored yet. Join some groups to start.</div>';
+                return;
+            }
+            // Calculate message counts for each group from allMessages
+            allGroups.forEach(group => {
+                const groupMsgs = allMessages.filter(m => m.group_id === group.id);
+                group.total_messages = groupMsgs.length;
+                group.scam_count = groupMsgs.filter(m => m.classification === 'Scam').length;
+                group.suspicious_count = groupMsgs.filter(m => m.classification === 'Suspicious').length;
+                group.normal_count = groupMsgs.filter(m => m.classification === 'Normal').length;
+            });
+           
+            // Sort by risk score
+            const sortedGroups = [...allGroups].sort((a, b) => b.risk_score - a.risk_score);
+           
+            container.innerHTML = sortedGroups.map(group => {
+                // Determine risk level
+                let riskClass = 'risk-low';
+                let riskLabel = 'Low Risk';
+                if (group.risk_score >= 8) {
+                    riskClass = 'risk-critical';
+                    riskLabel = '🔥 CRITICAL';
+                } else if (group.risk_score >= 5) {
+                    riskClass = 'risk-high';
+                    riskLabel = '⚠️ High Risk';
+                } else if (group.risk_score >= 3) {
+                    riskClass = 'risk-medium';
+                    riskLabel = '⚡ Medium Risk';
+                } else {
+                    riskLabel = '✅ Low Risk';
+                }
+                const riskProgress = (group.risk_score / 10) * 100;
+                return `
+                    <div class="group-monitor-card" onclick="showGroupDetails(${group.id})">
+                        <div class="group-monitor-header">
+                            <div class="group-monitor-name">
+                                🏢 ${escapeHtml(group.name)}
+                                ${group.username ? `<span style="color: #718096; font-size: 14px; font-weight: normal;">@${escapeHtml(group.username)}</span>` : ''}
+                            </div>
+                            <div class="group-risk-indicator">
+                                <span class="risk-score-badge ${riskClass}">${riskLabel}</span>
+                                <span style="font-weight: bold; color: #2d3748; font-size: 18px;">${group.risk_score}/10</span>
+                            </div>
+                        </div>
+                        <div class="group-stats-grid">
+                            <div class="group-stat-item">
+                                <div class="group-stat-label">👥 Members</div>
+                                <div class="group-stat-value">${group.members.toLocaleString()}</div>
+                            </div>
+                            <div class="group-stat-item">
+                                <div class="group-stat-label">💬 Total Messages</div>
+                                <div class="group-stat-value">${group.total_messages}</div>
+                            </div>
+                            <div class="group-stat-item">
+                                <div class="group-stat-label">✅ Normal</div>
+                                <div class="group-stat-value" style="color: #48bb78;">${group.normal_count}</div>
+                            </div>
+                            <div class="group-stat-item">
+                                <div class="group-stat-label">⚠️ Suspicious</div>
+                                <div class="group-stat-value" style="color: #ed8936;">${group.suspicious_count}</div>
+                            </div>
+                            <div class="group-stat-item">
+                                <div class="group-stat-label">🚨 Scam</div>
+                                <div class="group-stat-value" style="color: #f56565;">${group.scam_count}</div>
+                            </div>
+                            <div class="group-stat-item">
+                                <div class="group-stat-label">📅 Last Updated</div>
+                                <div class="group-stat-value" style="font-size: 12px;">${new Date(group.last_updated).toLocaleDateString()}</div>
+                            </div>
+                        </div>
+                        <div class="group-progress-bar">
+                            <div class="group-progress-fill" style="width: ${riskProgress}%"></div>
+                        </div>
+                        <div style="text-align: right; margin-top: 5px; font-size: 11px; color: #718096;">
+                            Risk Score: ${group.risk_score}/10 (${riskProgress.toFixed(0)}%)
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        // Show group details modal
+        function showGroupDetails(groupId) {
+            const group = allGroups.find(g => g.id === groupId);
+            if (!group) return;
+            const groupMessages = allMessages.filter(m => m.group_id === groupId);
+           
+            const modal = document.getElementById('messageModal');
+            const content = document.getElementById('modalContent');
+           
+            let riskClass = 'risk-low';
+            if (group.risk_score >= 8) riskClass = 'risk-critical';
+            else if (group.risk_score >= 5) riskClass = 'risk-high';
+            else if (group.risk_score >= 3) riskClass = 'risk-medium';
+           
+            content.innerHTML = `
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #2d3748; margin-bottom: 15px;">🏢 ${escapeHtml(group.name)}</h3>
+                    ${group.username ? `<p style="color: #718096; margin-bottom: 10px;">Username: @${escapeHtml(group.username)}</p>` : ''}
+                    <div style="display: flex; gap: 15px; align-items: center; margin-top: 15px;">
+                        <span class="risk-score-badge ${riskClass}">Risk Score: ${group.risk_score}/10</span>
+                        <span style="color: #718096;">ID: ${group.id}</span>
+                    </div>
+                </div>
+                <div style="background: #f7fafc; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                    <h4 style="color: #2d3748; margin-bottom: 15px;">📊 Group Statistics</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                        <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">Members</div>
+                            <div style="font-size: 24px; font-weight: bold; color: #667eea;">${group.members.toLocaleString()}</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">Total Messages</div>
+                            <div style="font-size: 24px; font-weight: bold; color: #667eea;">${group.total_messages}</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">Normal</div>
+                            <div style="font-size: 24px; font-weight: bold; color: #48bb78;">${group.normal_count}</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">Suspicious</div>
+                            <div style="font-size: 24px; font-weight: bold; color: #ed8936;">${group.suspicious_count}</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">Scam</div>
+                            <div style="font-size: 24px; font-weight: bold; color: #f56565;">${group.scam_count}</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: #2d3748; margin-bottom: 15px;">📨 Recent Messages (${Math.min(groupMessages.length, 10)})</h4>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        ${groupMessages.slice(0, 10).map(msg => {
+                            const classType = msg.classification.toLowerCase();
+                            return `
+                                <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid ${classType === 'scam' ? '#f56565' : classType === 'suspicious' ? '#ed8936' : '#48bb78'};">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                        <span class="tag ${classType}">${msg.classification}</span>
+                                        <span style="font-size: 11px; color: #a0aec0;">${new Date(msg.timestamp).toLocaleString()}</span>
+                                    </div>
+                                    <div style="font-size: 13px; color: #4a5568;">${escapeHtml(msg.content.substring(0, 100))}${msg.content.length > 100 ? '...' : ''}</div>
+                                    <div style="font-size: 11px; color: #718096; margin-top: 5px;">Confidence: ${msg.ensemble_confidence.toFixed(1)}%</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+                <div style="background: #fff5f5; padding: 15px; border-radius: 10px; border: 2px solid #fed7d7;">
+                    <strong style="color: #c53030;">⚠️ Risk Assessment:</strong>
+                    <p style="color: #4a5568; margin-top: 10px;">
+                        ${group.risk_score >= 8 ? 'CRITICAL - Immediate action required. This group shows extremely high scam activity.' :
+                          group.risk_score >= 5 ? 'HIGH RISK - Monitor closely. Significant suspicious activity detected.' :
+                          group.risk_score >= 3 ? 'MEDIUM RISK - Watch for patterns. Some suspicious messages found.' :
+                          'LOW RISK - Normal activity. Continue monitoring.'}
+                    </p>
+                </div>
+            `;
+            modal.classList.add('active');
+        }
+        // Load model metrics
+        async function loadModelMetrics() {
+            try {
+                const response = await fetch(`${API_BASE}/models/metrics`);
+                modelMetrics = await response.json();
+                displayModelPerformance();
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+                document.getElementById('modelPerformanceGrid').innerHTML =
+                    '<div class="loading" style="color: #f56565;">Models not trained yet. Run: python ml_scam_detector_fixed.py train</div>';
+            }
+        }
+        // Display model performance
+        function displayModelPerformance() {
+            if (!modelMetrics || !modelMetrics.metrics) return;
+           
+            const container = document.getElementById('modelPerformanceGrid');
+            const metrics = modelMetrics.metrics;
+           
+            container.innerHTML = Object.keys(metrics).map(modelName => {
+                const m = metrics[modelName];
+                return `
+                    <div class="model-performance">
+                        <div class="model-name">${modelName.replace(/_/g, ' ').toUpperCase()}</div>
+                        <div class="model-metrics">
+                            <div class="model-metric">
+                                <div class="model-metric-label">Accuracy</div>
+                                <div class="model-metric-value">${(m.accuracy * 100).toFixed(1)}%</div>
+                            </div>
+                            <div class="model-metric">
+                                <div class="model-metric-label">Precision</div>
+                                <div class="model-metric-value">${(m.precision * 100).toFixed(1)}%</div>
+                            </div>
+                            <div class="model-metric">
+                                <div class="model-metric-label">Recall</div>
+                                <div class="model-metric-value">${(m.recall * 100).toFixed(1)}%</div>
+                            </div>
+                            <div class="model-metric">
+                                <div class="model-metric-label">F1 Score</div>
+                                <div class="model-metric-value">${(m.f1_score * 100).toFixed(1)}%</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        // Load visualizations
+        async function loadVisualizations() {
+            try {
+                const response = await fetch(`${API_BASE}/models/plots`);
+                const data = await response.json();
+               
+                const container = document.getElementById('visualizationGallery');
+               
+                if (data.plots && data.plots.length > 0) {
+                    container.innerHTML = data.plots.map(plot => `
+                        <div class="viz-card" onclick="viewPlot('${plot}')">
+                            <img src="${API_BASE}/models/plots/${plot}" alt="${plot}">
+                            <div class="viz-title">${plot.replace(/_/g, ' ').replace('.png', '').toUpperCase()}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="loading">No visualizations available. Train models first.</div>';
+                }
+            } catch (error) {
+                console.error('Error loading visualizations:', error);
+            }
+        }
+        // Initialize charts
+        function initCharts() {
+            const ctx = document.getElementById('classificationChart').getContext('2d');
+            classificationChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Normal', 'Suspicious', 'Scam'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            '#48bb78',
+                            '#ed8936',
+                            '#f56565'
+                        ],
+                        borderWidth: 3,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 14, weight: 'bold' },
+                                padding: 20
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Message Classification Distribution',
+                            font: { size: 18, weight: 'bold' }
+                        }
+                    }
+                }
+            });
+        }
+        // Update classification chart
+        function updateClassificationChart(stats) {
+            if (classificationChart) {
+                classificationChart.data.datasets[0].data = [
+                    stats.normal_messages,
+                    stats.suspicious_messages,
+                    stats.fraud_messages
+                ];
+                classificationChart.update();
+            }
+        }
+        // Update message display
+        function updateMessageDisplay() {
+            const container = document.getElementById('messageList');
+           
+            if (allMessages.length === 0) {
+                container.innerHTML = '<div class="loading">No messages yet. Join groups to start monitoring...</div>';
+                return;
+            }
+            let filtered = filterMessagesByTab();
+           
+            container.innerHTML = filtered.map(msg => {
+                const classType = msg.classification.toLowerCase();
+               
+                const pred = msg.ml_prediction;
+                const indiv = pred.individual_predictions || {};
+                const conf = pred.individual_confidences || {};
+               
+                return `
+                    <div class="message-item ${classType}" onclick="showMessageDetail(${msg.id})">
+                        <div class="message-header">
+                            <span class="message-user">👤 User ${msg.user_id}</span>
+                            <span class="message-time">${new Date(msg.timestamp).toLocaleString()}</span>
+                        </div>
+                        <div class="message-content">${escapeHtml(msg.content.substring(0, 200))}${msg.content.length > 200 ? '...' : ''}</div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
+                            <span class="tag ${classType}">${msg.classification}</span>
+                            <span class="tag" style="background: #e6fffa; color: #234e52;">
+                                🎯 Ensemble: ${msg.ensemble_confidence.toFixed(1)}%
+                            </span>
+                            <span class="tag" style="background: #faf5ff; color: #44337a;">
+                                📊 ${Object.keys(indiv).length} Models
+                            </span>
+                        </div>
+                        ${Object.keys(indiv).length > 0 ? `
+                            <div class="message-ml-analysis">
+                                <strong style="color: #2d3748; display: block; margin-bottom: 10px;">ML Model Predictions:</strong>
+                                ${Object.keys(indiv).slice(0, 3).map(model => `
+                                    <div class="ml-prediction-row">
+                                        <span class="ml-model-name">${model.replace(/_/g, ' ')}</span>
+                                        <div class="ml-confidence">
+                                            <div class="confidence-bar">
+                                                <div class="confidence-fill" style="width: ${conf[model] || 0}%"></div>
+                                            </div>
+                                            <span style="font-size: 12px; font-weight: 600;">${(conf[model] || 0).toFixed(1)}%</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                                ${Object.keys(indiv).length > 3 ? `<div style="text-align: center; color: #718096; font-size: 12px; margin-top: 8px;">+${Object.keys(indiv).length - 3} more models</div>` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        // Filter messages by tab
+        function filterMessagesByTab() {
+            let filtered = [...allMessages];
+           
+            if (currentFilter === 'scam') {
+                filtered = filtered.filter(m => m.classification === "Scam");
+            } else if (currentFilter === 'suspicious') {
+                filtered = filtered.filter(m => m.classification === "Suspicious");
+            } else if (currentFilter === 'normal') {
+                filtered = filtered.filter(m => m.classification === "Normal");
+            }
+            return filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        }
+        // Switch tabs
+        function switchTab(tab) {
+            currentFilter = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            updateMessageDisplay();
+        }
+        // Show message detail
+        function showMessageDetail(msgId) {
+            const msg = allMessages.find(m => m.id === msgId);
+            if (!msg) return;
+            const modal = document.getElementById('messageModal');
+            const content = document.getElementById('modalContent');
+           
+            const pred = msg.ml_prediction;
+            const indiv = pred.individual_predictions || {};
+            const conf = pred.individual_confidences || {};
+            const voting = pred.voting_summary || {};
+           
+            content.innerHTML = `
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #2d3748; margin-bottom: 12px;">📝 Message Content</h3>
+                    <div style="background: #f7fafc; padding: 20px; border-radius: 12px; border-left: 5px solid #667eea;">
+                        ${escapeHtml(msg.content)}
+                    </div>
+                </div>
+                <div style="background: linear-gradient(135deg, #f7fafc, #edf2f7); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                    <h3 style="color: #2d3748; margin-bottom: 15px;">🎯 Final Classification</h3>
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <span class="tag ${msg.classification.toLowerCase()}" style="font-size: 16px; padding: 10px 20px;">
+                            ${msg.classification}
+                        </span>
+                        <div>
+                            <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">Ensemble Confidence</div>
+                            <div style="font-size: 24px; font-weight: bold; color: #667eea;">${msg.ensemble_confidence.toFixed(2)}%</div>
+                        </div>
+                    </div>
+                    ${pred.reasoning ? `
+                        <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 8px;">
+                            <strong>Reasoning:</strong> ${escapeHtml(pred.reasoning)}
+                        </div>
+                    ` : ''}
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #2d3748; margin-bottom: 15px;">🤖 Individual Model Predictions</h3>
+                    <div style="display: grid; gap: 12px;">
+                        ${Object.keys(indiv).map(model => `
+                            <div style="background: white; padding: 15px; border-radius: 10px; border: 2px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 600; color: #2d3748; margin-bottom: 5px;">
+                                        ${model.replace(/_/g, ' ').toUpperCase()}
+                                    </div>
+                                    <span class="tag ${indiv[model].toLowerCase()}">
+                                        ${indiv[model]}
+                                    </span>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">Confidence</div>
+                                    <div style="font-size: 20px; font-weight: bold; color: #667eea;">${(conf[model] || 0).toFixed(1)}%</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ${Object.keys(voting).length > 0 ? `
+                    <div style="background: #faf5ff; padding: 20px; border-radius: 12px; border: 2px solid #e9d8fd;">
+                        <h3 style="color: #2d3748; margin-bottom: 15px;">📊 Voting Summary</h3>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            ${Object.keys(voting).map(label => `
+                                <div style="background: white; padding: 12px 20px; border-radius: 10px; text-align: center;">
+                                    <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">${label}</div>
+                                    <div style="font-size: 24px; font-weight: bold; color: #9f7aea;">${voting[label]} models</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+            modal.classList.add('active');
+        }
+        // Close modal
+        function closeModal() {
+            document.getElementById('messageModal').classList.remove('active');
+        }
+        // Show model metrics modal
+        function showModelMetrics() {
+            if (!modelMetrics) {
+                showNotification('Model metrics not loaded yet', 'error');
+                return;
+            }
+           
+            const modal = document.getElementById('metricsModal');
+            const content = document.getElementById('metricsContent');
+           
+            const metrics = modelMetrics.metrics;
+           
+            content.innerHTML = `
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #2d3748; margin-bottom: 15px;">📊 Model Performance Comparison</h3>
+                    ${Object.keys(metrics).map(modelName => {
+                        const m = metrics[modelName];
+                        return `
+                            <div style="background: #f7fafc; padding: 20px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #667eea;">
+                                <h4 style="color: #2d3748; margin-bottom: 15px; font-size: 18px;">${modelName.replace(/_/g, ' ').toUpperCase()}</h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px;">
+                                    <div style="text-align: center; background: white; padding: 15px; border-radius: 10px;">
+                                        <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">Accuracy</div>
+                                        <div style="font-size: 24px; font-weight: bold; color: #667eea;">${(m.accuracy * 100).toFixed(2)}%</div>
+                                    </div>
+                                    <div style="text-align: center; background: white; padding: 15px; border-radius: 10px;">
+                                        <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">Precision</div>
+                                        <div style="font-size: 24px; font-weight: bold; color: #48bb78;">${(m.precision * 100).toFixed(2)}%</div>
+                                    </div>
+                                    <div style="text-align: center; background: white; padding: 15px; border-radius: 10px;">
+                                        <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">Recall</div>
+                                        <div style="font-size: 24px; font-weight: bold; color: #ed8936;">${(m.recall * 100).toFixed(2)}%</div>
+                                    </div>
+                                    <div style="text-align: center; background: white; padding: 15px; border-radius: 10px;">
+                                        <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">F1 Score</div>
+                                        <div style="font-size: 24px; font-weight: bold; color: #9f7aea;">${(m.f1_score * 100).toFixed(2)}%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+           
+            modal.classList.add('active');
+        }
+        // Close metrics modal
+        function closeMetricsModal() {
+            document.getElementById('metricsModal').classList.remove('active');
+        }
+        // View plot in modal
+        function viewPlot(plotName) {
+            window.open(`${API_BASE}/models/plots/${plotName}`, '_blank');
+        }
+        // Download dataset
+        function downloadDataset() {
+            if (allMessages.length === 0) {
+                showNotification('No data to export', 'error');
+                return;
+            }
+           
+            showNotification('Preparing CSV export...', 'info');
+           
+            const headers = ['Timestamp', 'User ID', 'Message', 'Classification', 'Confidence', 'Models Agreement'];
+            const rows = allMessages.map(msg => [
+                new Date(msg.timestamp).toLocaleString(),
+                msg.user_id,
+                msg.content.replace(/"/g, '""'),
+                msg.classification,
+                msg.ensemble_confidence.toFixed(2),
+                Object.keys(msg.ml_prediction.individual_predictions || {}).length
+            ]);
+           
+            const csv = [
+                headers.map(h => `"${h}"`).join(','),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+           
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `ml_scam_dataset_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+           
+            showNotification(`✅ Exported ${allMessages.length} messages`, 'success');
+        }
+        // Refresh dashboard
+        async function refreshDashboard() {
+            showNotification('Refreshing...', 'info');
+            await fetchStatistics();
+            await fetchMessages();
+            await fetchGroups();
+            await loadModelMetrics();
+            await loadVisualizations();
+            showNotification('✅ Dashboard refreshed!', 'success');
+        }
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const content = document.getElementById('notificationContent');
+           
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            content.innerHTML = `<strong>${icons[type]}</strong> ${message}`;
+            notification.className = `notification ${type} show`;
+           
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        // Initialize on load
+        window.addEventListener('load', initDashboard);
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
