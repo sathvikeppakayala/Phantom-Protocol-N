@@ -110,9 +110,9 @@ except:
 # ==================== CONFIGURATION ====================
 class Config:
     # Telegram
-    TELEGRAM_API_ID = "34029087"  # Replace with your API ID
-    TELEGRAM_API_HASH = "030807f7477ed5aac277c8589b4ae2ae"  # Replace with your API Hash
-    TELEGRAM_PHONE = "+919949284184"  # Replace with your phone number
+    TELEGRAM_API_ID = "xxxx"  # Replace with your API ID
+    TELEGRAM_API_HASH = "xxxx"  # Replace with your API Hash
+    TELEGRAM_PHONE = "xxxxx"  # Replace with your phone number
     TELEGRAM_SESSION_NAME = "scam_detector_session"
     # Dataset
     DATASET_PATH = r"C:\Users\SATHVIK\TGSRTC\scam_final.csv"
@@ -123,14 +123,14 @@ class Config:
     TEMP_DIR = "temp_media"
     
     # MongoDB
-    MONGODB_URI = "mongodb+srv://eppakayalasathvik72_db_user:v3CXxzZADEuAwyI7@telebot.y3sfa7z.mongodb.net/"
+    MONGODB_URI = "xvxvhsvdajsvdadkadkas"
     DATABASE_NAME = "telegram_scam_detection_ml"
     
     # Email
     SMTP_HOST = "smtp.gmail.com"
     SMTP_PORT = 587
-    SMTP_USER = "isronasaesa@gmail.com"
-    SMTP_PASS = "nyeo strg pgsu nsgz"
+    SMTP_USER = "nadjdjasklaslfaslb"
+    SMTP_PASS = "asgddakbbfaskjhdbasdbaskldbl"
     CYBER_CELL_EMAIL = "eppakayalasathvik72@gmail.com"
     
     # ML Parameters
